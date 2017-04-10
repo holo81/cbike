@@ -23,7 +23,7 @@ const ChannelsList = ({ data: { loading, error, bikeRentalStations } }) => {
     return <p>{error.message}</p>;
   }
   return <ul>
-    {bikeRentalStations.map(ch => <li key={ch.stationId}>{ch.name}</li>)}
+    {bikeRentalStations.map(ch => <li key={ch.stationId}>{ch.name} {ch.bikesAvailable} {ch.spacesAvailable}</li>)}
   </ul>;
 };
 
