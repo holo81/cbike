@@ -1,0 +1,14 @@
+{nearest(lat:60.1756332,lon:24.9150216,maxDistance:100)
+  {edges
+	  {node
+  		{id
+        place {
+          ... on BikeRentalStation{id
+          name
+          bikesAvailable
+          spacesAvailable}
+        }
+  		}
+    }
+  }
+}
