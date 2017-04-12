@@ -15,16 +15,25 @@ const client = new ApolloClient({
     { uri: 'https://api.digitransit.fi/routing/v1/routers/finland/index/graphql' })
 });
 
-const ChannelsList = ({ data: { loading, error, bikeRentalStations } }) => {
+const ChannelsList = ({ data: { loading, error, nearest } }) => {
   if (loading) {
     return <p>Loading ...</p>;
   }
   if (error) {
     return <p>{error.message}</p>;
   }
-  return <ul>
-    {bikeRentalStations.map(ch => <li key={ch.stationId}>{ch.name} {ch.bikesAvailable} {ch.spacesAvailable}</li>)}
-  </ul>;
+  console.log(nearest.edges)
+  return <table>
+    <thead><tr><th>Name</th><th>Distance</th><th>Bikes Available</th><th>Places empty</th></tr></thead>
+    <tbody>
+      {nearest.edges.map(ch => <tr id={ch.node.place.stationId}>
+        <td>{ch.node.place.name}</td>
+        <td>{ch.node.distance} m</td>
+        <td>{ch.node.place.bikesAvailable}</td>
+        <td>{ch.node.place.spacesAvailable}</td>
+      </tr>)}
+    </tbody>
+  </table>;
 };
 
 const channelsListQuery = gql`query MyQuery { bikeRentalStations {
@@ -38,17 +47,49 @@ const channelsListQuery = gql`query MyQuery { bikeRentalStations {
 }
  `;
 
+const newQuery = gql`
+ query foo($lat:Float, $lon:Float, $maxDistance:Int, $maxResults:Int) {nearest(lat:$lat, lon:$lon, maxDistance:$maxDistance, maxResults:$maxResults, filterByPlaceTypes:[BICYCLE_RENT])
+  {edges
+          {node
+                {id
+                  distance
+        place {
+          __typename
+          ... on BikeRentalStation{id
+          stationId
+          name
+          bikesAvailable
+          spacesAvailable
+          }
+        }
+      }
+    }
+  }
+}
+`;
+
 const ChannelsListWithData = graphql(channelsListQuery)(ChannelsList);
+const NewChannelsListWithData = graphql(newQuery, {
+  options: (ownProps) => ({
+    // pollInterval: 5000,
+    variables: {
+      lat: 60.1756332,
+      lon: 24.9150216,
+      maxDistance: 10000,
+      maxResults: 500
+    }
+  })
+})(ChannelsList);
+
 class App extends Component {
   render() {
     return (
       <ApolloProvider client={client}>
         <div className="App">
           <div className="App-header">
-            <img src={logo} className="App-logo" alt="logo" />
-            <h2>Welcome to Apollo</h2>
+            <h2>HSL Citybikes</h2>
           </div>
-          <ChannelsListWithData />
+          <NewChannelsListWithData />
         </div>
       </ApolloProvider>
     );
