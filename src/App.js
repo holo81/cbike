@@ -24,10 +24,12 @@ const ChannelsList = ({ data: { loading, error, nearest } }) => {
   }
   console.log(nearest.edges)
   return <table>
-    <thead><tr><th>Name</th><th>Distance</th><th>Bikes Available</th><th>Places empty</th></tr></thead>
+    <thead><tr><th>Place</th><th>Distance</th><th>Bikes Available</th><th>Places empty</th></tr></thead>
     <tbody>
       {nearest.edges.map(ch => <tr id={ch.node.place.stationId}>
-        <td>{ch.node.place.name}</td>
+        <td>
+          <a href={`https://maps.google.com?saddr=Current+Location&daddr=${ch.node.place.lat},${ch.node.place.lon}`}>{ch.node.place.name}</a>
+          </td>
         <td>{ch.node.distance} m</td>
         <td>{ch.node.place.bikesAvailable}</td>
         <td>{ch.node.place.spacesAvailable}</td>
@@ -60,6 +62,8 @@ const newQuery = gql`
           name
           bikesAvailable
           spacesAvailable
+          lon
+          lat
           }
         }
       }
