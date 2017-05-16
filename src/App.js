@@ -72,8 +72,8 @@ class StationList extends Component {
       <a href={`https://maps.google.com?&dirflg=b&saddr=Current+Location&daddr=${ch.node.place.lat},${ch.node.place.lon}`}>{ch.node.place.name}</a>
       </td>
       <td>{ch.node.distance} m</td>
-      <td>{ch.node.place.bikesAvailable}</td>
-      <td>{ch.node.place.spacesAvailable}</td>
+      <td className={(parseInt(ch.node.place.bikesAvailable) < 5) ? 'low' : 'high'}>{ch.node.place.bikesAvailable}</td>
+      <td className={(parseInt(ch.node.place.spacesAvailable) < 5) ? 'low' : 'high'}>{ch.node.place.spacesAvailable}</td>
       </tr>)}
       </tbody>
       </table>;
