@@ -15,9 +15,9 @@ const client = new ApolloClient({
 });
 
 var options = {
-  enableHighAccuracy: true,
-  timeout: 5000,
-  maximumAge: 0
+  enableHighAccuracy: true, 
+  maximumAge        : 30000, 
+  timeout           : 1000
 };
 
 
@@ -29,7 +29,7 @@ class NotTheFinalList extends Component {
 
   constructor(props) {
     super(props);
-    this.state = {lat: 0, lon: 0};
+    this.state = {};
 
     this.geoSuccess = this.geoSuccess.bind(this)
   }
@@ -37,17 +37,20 @@ class NotTheFinalList extends Component {
   geoSuccess(pos) {
     var crd = pos.coords;
     
-    console.log('Your current position is:');
-    console.log(`Latitude : ${crd.latitude}`);
-    console.log(`Longitude: ${crd.longitude}`);
-    console.log(`More or less ${crd.accuracy} meters.`);
+    // console.log('Your current position is:');
+    // console.log(`Latitude : ${crd.latitude}`);
+    // console.log(`Longitude: ${crd.longitude}`);
+    // console.log(`More or less ${crd.accuracy} meters.`);
     this.setState({lat: crd.latitude,
       lon: crd.longitude})
     }
 
+    componentDidMount() {
+      navigator.geolocation.getCurrentPosition(this.geoSuccess, error, options);
+    }
+
   render() {
-    navigator.geolocation.getCurrentPosition(this.geoSuccess, error, options);
-    return (<NewChannelsListWithData lat={this.state.lat}
+        return (<NewChannelsListWithData lat={this.state.lat}
                                     lon={this.state.lon}/>)
     
   }
@@ -63,7 +66,6 @@ class StationList extends Component {
       if (this.props.data.error) {
         return <p>{this.props.data.error.message}</p>;
       }
-      console.log(this.props.data.nearest)
       return <table>
       <thead><tr><th>Place</th><th>Distance</th><th>Bikes Available</th><th>Places empty</th></tr></thead>
       <tbody>
@@ -72,8 +74,8 @@ class StationList extends Component {
       <a href={`https://maps.google.com?&dirflg=b&saddr=Current+Location&daddr=${ch.node.place.lat},${ch.node.place.lon}`}>{ch.node.place.name}</a>
       </td>
       <td>{ch.node.distance} m</td>
-      <td className={(parseInt(ch.node.place.bikesAvailable) < 5) ? 'low' : 'high'}>{ch.node.place.bikesAvailable}</td>
-      <td className={(parseInt(ch.node.place.spacesAvailable) < 5) ? 'low' : 'high'}>{ch.node.place.spacesAvailable}</td>
+      <td className={ch.node.place.bikesAvailable < 5 ? 'low' : 'high'}>{ch.node.place.bikesAvailable}</td>
+      <td className={ch.node.place.spacesAvailable < 5 ? 'low' : 'high'}>{ch.node.place.spacesAvailable}</td>
       </tr>)}
       </tbody>
       </table>;
@@ -106,6 +108,7 @@ class StationList extends Component {
   const NewChannelsListWithData = graphql(newQuery, {
     options: (ownProps) => ({
       // pollInterval: 5000,
+      skip: ownProps.lat === 0 || !ownProps.lat,
      variables: {
         lat: ownProps.lat,
         lon: ownProps.lon,
@@ -114,18 +117,28 @@ class StationList extends Component {
       }
     })
   })(StationList);
+
+  class Footer extends Component {
+    render() {
+    return(<div className="App-Footer">
+            (c) <a href="mailto:citybike@salegosse.net">Salegosse</a>
+            </div>)
+  }
+  }
   
   class App extends Component {
     render() {
       return (
       <ApolloProvider client={client}>
       <div className="App">
-      <div className="App-header">
-      <h2>HSL Citybikes</h2>
-      </div>
-      <NotTheFinalList />
-      </div>
-      </ApolloProvider>
+        <div className="App-header">
+          <h2>HSL Citybikes</h2>
+        </div>
+        <NotTheFinalList />
+        
+        <div><Footer /></div>
+        </div>
+        </ApolloProvider>
       );
     }
   }
