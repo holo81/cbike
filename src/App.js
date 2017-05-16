@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import { withState, pure, compose } from 'recompose';
 import './App.css';
 
 import {
@@ -15,15 +14,50 @@ const client = new ApolloClient({
   { uri: 'https://api.digitransit.fi/routing/v1/routers/finland/index/graphql' })
 });
 
-class StationListPure extends Component {
-    constructor(props) {
-      super(props);
+var options = {
+  enableHighAccuracy: true,
+  timeout: 5000,
+  maximumAge: 0
+};
+
+
+function error(err) {
+  console.warn(`ERROR(${err.code}): ${err.message}`);
+};
+
+class NotTheFinalList extends Component {
+
+  constructor(props) {
+    super(props);
+    this.state = {lat: 0, lon: 0};
+
+    this.geoSuccess = this.geoSuccess.bind(this)
+  }
+
+  geoSuccess(pos) {
+    var crd = pos.coords;
+    
+    console.log('Your current position is:');
+    console.log(`Latitude : ${crd.latitude}`);
+    console.log(`Longitude: ${crd.longitude}`);
+    console.log(`More or less ${crd.accuracy} meters.`);
+    this.setState({lat: crd.latitude,
+      lon: crd.longitude})
     }
+
+  render() {
+    navigator.geolocation.getCurrentPosition(this.geoSuccess, error, options);
+    return (<NewChannelsListWithData lat={this.state.lat}
+                                    lon={this.state.lon}/>)
     
-    
+  }
+}
+
+class StationList extends Component {
+
     render() {
       
-      if (this.props.data.loading) {
+      if (!this.props.data || this.props.data.loading) {
         return <p>Loading ...</p>;
       }
       if (this.props.data.error) {
@@ -45,67 +79,40 @@ class StationListPure extends Component {
       </table>;
     }
   }
-
-const queryData = graphgql(`
-query foo($lat:Float, $lon:Float, $maxDistance:Int, $maxResults:Int) {nearest(lat:$lat, lon:$lon, maxDistance:$maxDistance, maxResults:$maxResults, filterByPlaceTypes:[BICYCLE_RENT])
-  {edges
-    {node
-      {id
-        distance
-        place {
-          __typename
-          ... on BikeRentalStation{id
-            stationId
-            name
-            bikesAvailable
-            spacesAvailable
-            lon
-            lat
+  
+  const newQuery = gql`
+  query foo($lat:Float, $lon:Float, $maxDistance:Int, $maxResults:Int) {nearest(lat:$lat, lon:$lon, maxDistance:$maxDistance, maxResults:$maxResults, filterByPlaceTypes:[BICYCLE_RENT])
+    {edges
+      {node
+        {id
+          distance
+          place {
+            __typename
+            ... on BikeRentalStation{id
+              stationId
+              name
+              bikesAvailable
+              spacesAvailable
+              lon
+              lat
+            }
           }
         }
       }
     }
   }
-}
-`, {
+  `;
+  
+  const NewChannelsListWithData = graphql(newQuery, {
     options: (ownProps) => ({
-      variables: {
-        lat: ownProps.state.lat,
-        lon: ownProps.state.lon,
+      // pollInterval: 5000,
+     variables: {
+        lat: ownProps.lat,
+        lon: ownProps.lon,
         maxDistance: 10000,
         maxResults: 500
       }
-    }),
-});
-
-const StationSearchResults = compose(
-  data,
-  pure,
-)(StationListPure);
-
-const location = withState('location', {lat:0, lon:0})
-
-function getLocation() {
-  navigator.geolocation.getCurrentPosition((pos) => {
-    var crd = pos.coords;
-    console.log('Your current position is:');
-    console.log(`Latitude : ${crd.latitude}`);
-    console.log(`Longitude: ${crd.longitude}`);
-    console.log(`More or less ${crd.accuracy} meters.`);
-    }
-    , (err) => {console.warn(`ERROR(${err.code}): ${err.message}`);}
-    , {
-      enableHighAccuracy: true,
-      timeout: 5000,
-      maximumAge: 0
-    });
-  }
-  
-  
-  
-  
-  
-  const NewChannelsListWithData = graphql(newQuery
+    })
   })(StationList);
   
   class App extends Component {
@@ -116,7 +123,7 @@ function getLocation() {
       <div className="App-header">
       <h2>HSL Citybikes</h2>
       </div>
-      <NewChannelsListWithData />
+      <NotTheFinalList />
       </div>
       </ApolloProvider>
       );
