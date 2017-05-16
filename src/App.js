@@ -120,8 +120,8 @@ class StationList extends Component {
 
   class Footer extends Component {
     render() {
-    return(<div className="App-Footer">
-            (c) <a href="mailto:citybike@salegosse.net">Salegosse</a>
+    return(<div className="App-footer">
+            (c) <a href="mailto:holo81@gmail.com">Salegosse</a>
             </div>)
   }
   }
