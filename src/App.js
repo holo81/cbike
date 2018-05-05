@@ -11,7 +11,7 @@ import {
 
 const client = new ApolloClient({
   networkInterface: createNetworkInterface(
-  { uri: 'https://api.digitransit.fi/routing/v1/routers/finland/index/graphql' })
+  { uri: 'https://api.digitransit.fi/routing/v1/routers/hsl/index/graphql' })
 });
 
 var options = {
